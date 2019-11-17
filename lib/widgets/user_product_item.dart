@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:kasishop/providers/products_provider.dart';
+import 'package:kasishop/screens/edit_product_screen.dart';
+import 'package:provider/provider.dart';
 
 class UserProductItem extends StatelessWidget {
   final String title;
   final String imageUrl;
+  final String id;
 
-  UserProductItem({this.title, this.imageUrl});
+  UserProductItem({this.id, this.title, this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -20,12 +24,17 @@ class UserProductItem extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.edit),
               color: Theme.of(context).primaryColor,
-              onPressed: () {},
+              onPressed: () => Navigator.pushNamed(
+                  context, EditProductScreen.routeName,
+                  arguments: id),
             ),
             IconButton(
               icon: Icon(Icons.delete),
               color: Theme.of(context).errorColor,
-              onPressed: () {},
+              onPressed: () {
+                Provider.of<Products>(context).deleteProduct(id);
+                
+              },
             ),
           ],
         ),
