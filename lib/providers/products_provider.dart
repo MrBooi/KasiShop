@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -65,7 +64,7 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
-  Future<Void> addProduct(Product product) {
+  Future<void> addProduct(Product product) {
     const url = 'https://shop-app-f2611.firebaseio.com/products.json';
     return http
         .post(
@@ -86,8 +85,8 @@ class Products with ChangeNotifier {
           description: product.description,
           imageUrl: product.imageUrl);
       _items.add(newProduct);
-    });
-    notifyListeners();
+      notifyListeners();
+    }).catchError((error) => {throw error});
   }
 
   void editProduct(String productId, Product product) {
