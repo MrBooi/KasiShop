@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import './product.dart';
 
 class Products with ChangeNotifier {
-  final List<Product> _items = [
+   List<Product> _items = [
     Product(
       id: 'p1',
       title: 'Red Shirt',
@@ -84,11 +84,10 @@ class Products with ChangeNotifier {
           description: product.description,
           imageUrl: product.imageUrl);
       _items.add(newProduct);
-       notifyListeners();
+      notifyListeners();
     } catch (e) {
       throw e;
     }
-   
   }
 
   void editProduct(String productId, Product product) {
@@ -107,5 +106,31 @@ class Products with ChangeNotifier {
   void deleteProduct(String _id) {
     _items.removeWhere((prod) => prod.id == _id);
     notifyListeners();
+  }
+
+  Future<void> fetchAndSetProducts() async {
+    const url = 'https://shop-app-f2611.firebaseio.com/products.json';
+    try {
+      final response = await http.get(url);
+      final List<Product> loadedProducts = [];
+      if (json.decode(response.body) != null) {
+        final extractedData =
+            json.decode(response.body) as Map<String, dynamic>;
+        extractedData.forEach((prodId, prodData) {
+          loadedProducts.add(Product(
+              id: prodId,
+              title: prodData['title'],
+              description: prodData['description'],
+              price: prodData['price'],
+              imageUrl: prodData['imageUrl'],
+              isFavorite: prodData['isFavorite']));
+        });
+        _items = loadedProducts;
+
+        notifyListeners();
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 }
