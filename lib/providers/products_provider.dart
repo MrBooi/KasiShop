@@ -64,29 +64,31 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
-  Future<void> addProduct(Product product) {
+  Future<void> addProduct(Product product) async {
     const url = 'https://shop-app-f2611.firebaseio.com/products.json';
-    return http
-        .post(
-      url,
-      body: json.encode({
-        'title': product.title,
-        'description': product.description,
-        'imageUrl': product.imageUrl,
-        'price': product.price,
-        'isFavorite': product.isFavorite
-      }),
-    )
-        .then((resonse) {
+    try {
+      final respose = await http.post(
+        url,
+        body: json.encode({
+          'title': product.title,
+          'description': product.description,
+          'imageUrl': product.imageUrl,
+          'price': product.price,
+          'isFavorite': product.isFavorite
+        }),
+      );
       final newProduct = Product(
-          id: json.decode(resonse.body)['name'],
+          id: json.decode(respose.body)['name'],
           title: product.title,
           price: product.price,
           description: product.description,
           imageUrl: product.imageUrl);
       _items.add(newProduct);
-      notifyListeners();
-    }).catchError((error) => {throw error});
+       notifyListeners();
+    } catch (e) {
+      throw e;
+    }
+   
   }
 
   void editProduct(String productId, Product product) {
