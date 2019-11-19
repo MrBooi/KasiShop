@@ -45,8 +45,9 @@ class Products with ChangeNotifier {
   // var _showFavoritesOnly = false;
 
   final String _authtoken;
+  final String _userId;
 
-  Products(this._authtoken, this._items);
+  Products(this._authtoken, this._userId, this._items);
 
   List<Product> get items {
     // if (_showFavoritesOnly) {
@@ -59,16 +60,6 @@ class Products with ChangeNotifier {
     return _items.where((item) => item.isFavorite).toList();
   }
 
-  // void showFavoritesOnly() {
-  //   _showFavoritesOnly = true;
-  //   notifyListeners();
-  // }
-
-  // void showAll() {
-  //   _showFavoritesOnly = false;
-  //   notifyListeners();
-  // }
-
   Future<void> addProduct(Product product) async {
     final url =
         'https://shop-app-f2611.firebaseio.com/products.json?auth=$_authtoken';
@@ -80,7 +71,7 @@ class Products with ChangeNotifier {
           'description': product.description,
           'imageUrl': product.imageUrl,
           'price': product.price,
-          'isFavorite': product.isFavorite
+          "creatorId": _userId
         }),
       );
       final newProduct = Product(
@@ -145,13 +136,19 @@ class Products with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    var filterByString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$_userId"' : '';
     final url =
         'https://shop-app-f2611.firebaseio.com/products.json?auth=$_authtoken';
+    final orderUrl =
+        'https://shop-app-f2611.firebaseio.com/userFavorites/$_userId.json?auth=$_authtoken&$filterByString';
     try {
       final response = await http.get(url);
       final List<Product> loadedProducts = [];
       if (json.decode(response.body) != null) {
+        final favoriteResponse = await http.get(orderUrl);
+        final favoriteData = json.decode(favoriteResponse.body);
         final extractedData =
             json.decode(response.body) as Map<String, dynamic>;
         extractedData.forEach((prodId, prodData) {
@@ -161,7 +158,9 @@ class Products with ChangeNotifier {
               description: prodData['description'],
               price: prodData['price'],
               imageUrl: prodData['imageUrl'],
-              isFavorite: prodData['isFavorite']));
+              isFavorite: favoriteData == null
+                  ? false
+                  : favoriteData[prodId] ?? false));
         });
         _items = loadedProducts;
 
