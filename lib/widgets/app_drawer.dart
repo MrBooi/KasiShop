@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:kasishop/providers/Auth.dart';
 import 'package:kasishop/screens/user_products_screen.dart';
+import 'package:provider/provider.dart';
 import '../screens/orders_screen.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -35,6 +37,15 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pushReplacementNamed(
                   context, UserProductsScreen.routeName);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.exit_to_app),
+            title: Text('LogOut'),
+            onTap: () {
+              Navigator.of(context).pop();
+              Provider.of<Auth>(context, listen: false).onLogout();
             },
           )
         ],
