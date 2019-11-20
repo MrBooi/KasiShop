@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/http_exception.dart';
 
@@ -51,14 +53,47 @@ class Auth with ChangeNotifier {
       _userId = responseData['localId'];
       _expiryDate = DateTime.now().add(
         Duration(
-          seconds: int.parse(responseData['expiresIn']),
+          seconds: int.parse(
+            responseData['expiresIn'],
+          ),
         ),
       );
+      final prefs = await SharedPreferences.getInstance();
+      final userData = json.encode(
+        {
+          'token': _token,
+          'expiryDate': _expiryDate.toIso8601String(),
+          'userId': userId
+        },
+      );
+      prefs.setString('userData', userData);
       onAuthLogout();
       notifyListeners();
     } catch (error) {
       throw error;
     }
+  }
+
+  Future<bool> tryAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('userData')) {
+      return false;
+    }
+    final exctractedUserData =
+        json.decode(prefs.getString('userData')) as Map<String, Object>;
+    final expiryDate = DateTime.parse(exctractedUserData['expiryDate']);
+
+    if (expiryDate.isBefore(DateTime.now())) {
+      return false;
+    }
+    _token = exctractedUserData['token'];
+    _userId = exctractedUserData['userId'];
+    _expiryDate = expiryDate;
+
+    notifyListeners();
+    onAuthLogout();
+
+    return true;
   }
 
   Future<void> onSignup(String email, String password) async {
@@ -69,7 +104,7 @@ class Auth with ChangeNotifier {
     return _authenticate(email, password, 'signInWithPassword');
   }
 
-  void onLogout() {
+  void onLogout() async {
     _token = null;
     _userId = null;
     _expiryDate = null;
@@ -78,6 +113,8 @@ class Auth with ChangeNotifier {
     }
     _authTimer = null;
     notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
   }
 
   void onAuthLogout() {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kasishop/providers/Auth.dart';
 
 import 'package:kasishop/providers/products_provider.dart';
+import 'package:kasishop/screens/splash_screen.dart';
 
 import 'package:provider/provider.dart';
 import './providers/cart.dart';
@@ -48,7 +49,15 @@ class MyApp extends StatelessWidget {
               primarySwatch: Colors.purple,
               accentColor: Colors.deepOrange,
               fontFamily: 'Lato'),
-          home: auth.isAuth ? ProductOverviewScreen() : AuthScreen(),
+          home: auth.isAuth
+              ? ProductOverviewScreen()
+              : FutureBuilder(
+                  future: auth.tryAutoLogin(),
+                  builder: (ctx, snapshot) =>
+                      snapshot.connectionState == ConnectionState.waiting
+                          ? SplashScreen()
+                          : AuthScreen(),
+                ),
           routes: {
             AuthScreen.routeName: (ctx) => AuthScreen(),
             ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
